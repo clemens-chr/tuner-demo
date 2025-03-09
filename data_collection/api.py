@@ -53,6 +53,16 @@ def generate_frames():
 def video_feed():
     return StreamingResponse(generate_frames(), media_type="multipart/x-mixed-replace; boundary=frame")
 
+@app.get("/start_recording")
+def start_recording():
+    tracker.start_recording()
+    return "Recording started"
+
+@app.get("/stop_recording")
+def stop_recording():
+    tracker.stop_recording()
+    return "Recording stopped"
+
 @app.on_event("shutdown")
 def shutdown_event():
     tracker.stop()

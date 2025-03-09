@@ -3,13 +3,9 @@ import mujoco
 import numpy as np
 import csv
 import time
+import pandas as pd
 
 # length
-
-trajectories = {
-    "right_wrist_roll_joint": np.cos(np.linspace(0, 2*np.pi, 500)),
-}
-
 """
 left_hip_pitch_joint
 left_hip_roll_joint
@@ -56,6 +52,25 @@ right_hand_middle_0_joint
 right_hand_middle_1_joint
 """
 
+def load_trajectories_from_csv(file_path):
+    df = pd.read_csv(file_path)
+    
+    trajectories = {}
+    for column in df.columns:
+        scale = 1.0
+        if "0" in column:
+            scale = 4.0
+
+        if "thumb" in column:
+            scale = -2.0
+
+        
+        trajectories[column] = (-df[column].values + 180.0)/90.0*scale
+    
+    return trajectories
+
+trajectories = load_trajectories_from_csv('./policy/policy.csv')
+
 def set_actuator_trajectory(model, name, values):
     id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_ACTUATOR, name)
     trajectories[id, :] = values
@@ -95,12 +110,12 @@ def inv_kinem(model, data, end_effector_id, goal, tol=1e-2, step_size=0.0, dampi
 def run(model_path):
     model = mujoco.MjModel.from_xml_path(model_path)
     data = mujoco.MjData(model)
-    #v = mujoco.viewer.launch_passive(model, data)
-    mujoco.viewer.launch(model)
+    v = mujoco.viewer.launch_passive(model, data)
+    #mujoco.viewer.launch(model)
 
     index = 0
     while True:
-        t = int(index // 5) # int seconds
+        t = int(index // 25) # int seconds
 
         #data.ctrl[:] = trajectory[:, t]
 

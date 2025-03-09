@@ -36,6 +36,7 @@ def calculate_angle(a, b, c):
 
 class MediaPipeTracker:
     def __init__(self, show=False, camera=0):
+        self.is_recording = False
         self.cap = cv2.VideoCapture(camera)
         self.hands = mp_hands.Hands(
             model_complexity=0,
@@ -53,6 +54,12 @@ class MediaPipeTracker:
         self.running = False
         self.frame = None  # Shared frame for display in main thread
         self.thread = threading.Thread(target=self.run_tracker)
+
+    def start_recording(self):
+        self.is_recording = True
+    
+    def stop_recording(self):
+        self.is_recording = False
 
     def start(self):
         self.running = True
@@ -251,7 +258,8 @@ class MediaPipeTracker:
                         dict_unitree["right_hand_middle_0_joint"] = (mcp_angle_pinky + mcp_angle_ring) / 2
                         dict_unitree["right_hand_middle_1_joint"] = (pip_angle_pinky + pip_angle_ring) / 2
                         
-                        append_to_policy_csv(csv_file, dict_unitree)
+                        if self.is_recording:
+                            append_to_policy_csv(csv_file, dict_unitree)
                         
         
                         for i in range(4):
