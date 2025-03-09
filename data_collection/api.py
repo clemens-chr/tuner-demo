@@ -6,6 +6,8 @@ import time
 from handtracker import MediaPipeTracker
 import numpy as np
 
+import groq_utils
+
 app = FastAPI()
 
 # Initialize the MediaPipeTracker
@@ -63,7 +65,14 @@ def stop_recording():
     tracker.stop_recording()
     return "Recording stopped"
 
+@app.get("/groq")
+def groq(prompt: str):
+    print("Prompt:", prompt)
+    return groq_utils.groq(prompt)    
+    
 @app.on_event("shutdown")
 def shutdown_event():
     tracker.stop()
     capture_thread.join()
+
+
