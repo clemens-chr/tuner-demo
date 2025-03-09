@@ -4,44 +4,118 @@ import numpy as np
 import csv
 import time
 
-def load_joint_angles(csv_file):
-    joint_angles = []
-    with open(csv_file, 'r') as file:
-        reader = csv.DictReader(file)
-        for row in reader:
-            joint_angles.append({
-                'timestamp': float(row['timestamp']),
-                'joint1': float(row['joint1']),
-                'joint2': float(row['joint2']),
-                'joint3': float(row['joint3'])
-            })
-    return joint_angles
+# length
 
-def replay_joint_angles(model_path, joint_angles):
+trajectories = {
+    "right_wrist_roll_joint": np.cos(np.linspace(0, 2*np.pi, 500)),
+}
+
+"""
+left_hip_pitch_joint
+left_hip_roll_joint
+left_hip_yaw_joint
+left_knee_joint
+left_ankle_pitch_joint
+left_ankle_roll_joint
+right_hip_pitch_joint
+right_hip_roll_joint
+right_hip_yaw_joint
+right_knee_joint
+right_ankle_pitch_joint
+right_ankle_roll_joint
+waist_yaw_joint
+waist_roll_joint
+waist_pitch_joint
+left_shoulder_pitch_joint
+left_shoulder_roll_joint
+left_shoulder_yaw_joint
+left_elbow_joint
+left_wrist_roll_joint
+left_wrist_pitch_joint
+left_wrist_yaw_joint
+left_hand_thumb_0_joint
+left_hand_thumb_1_joint
+left_hand_thumb_2_joint
+left_hand_middle_0_joint
+left_hand_middle_1_joint
+left_hand_index_0_joint
+left_hand_index_1_joint
+right_shoulder_pitch_joint
+right_shoulder_roll_joint
+right_shoulder_yaw_joint
+right_elbow_joint
+right_wrist_roll_joint
+right_wrist_pitch_joint
+right_wrist_yaw_joint
+right_hand_thumb_0_joint
+right_hand_thumb_1_joint
+right_hand_thumb_2_joint
+right_hand_index_0_joint
+right_hand_index_1_joint
+right_hand_middle_0_joint
+right_hand_middle_1_joint
+"""
+
+def set_actuator_trajectory(model, name, values):
+    id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_ACTUATOR, name)
+    trajectories[id, :] = values
+
+def inv_kinem(model, data, end_effector_id, goal, tol=1e-2, step_size=0.0, damping=0.15):
+    error = np.subtract(goal, data.body(end_effector_id).xpos)
+    if (np.linalg.norm(error) >= tol):
+        #Calculate jacobian
+        jacp = np.zeros((3, model.nv)) #translation jacobian
+        jacr = np.zeros((3, model.nv)) #rotational jacobian
+
+        end_effector_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, end_effector_id)
+        mujoco.mj_jac(model, data, jacp, jacr, goal, end_effector_id)
+        #Calculate delta of joint q
+        n = jacp.shape[1]
+        I = np.identity(n)
+        product = jacp.T @ jacp + damping * I
+
+        if np.isclose(np.linalg.det(product), 0):
+            j_inv = np.linalg.pinv(product) @ jacp.T
+        else:
+            j_inv = np.linalg.inv(product) @ jacp.T
+
+        delta_q = j_inv @ error
+
+        #Compute next step
+        q = data.qpos.copy()
+
+        q += step_size * np.concatenate((delta_q, np.zeros(len(q)- model.nv)))
+        
+       
+        #Check limits
+        #check_joint_limits(data.qpos)
+        
+        return q[:model.nu]
+
+def run(model_path):
     model = mujoco.MjModel.from_xml_path(model_path)
     data = mujoco.MjData(model)
-    
+    #v = mujoco.viewer.launch_passive(model, data)
+    mujoco.viewer.launch(model)
 
-    start_time = time.time()
-    for angle_set in joint_angles:
-        current_time = time.time() - start_time
-        while current_time < angle_set['timestamp']:
-            current_time = time.time() - start_time
+    index = 0
+    while True:
+        t = int(index // 5) # int seconds
 
-        data.ctrl[0] = angle_set['joint1']
-        data.ctrl[1] = angle_set['joint2']
-        data.ctrl[2] = angle_set['joint3']
+        #data.ctrl[:] = trajectory[:, t]
+
+        ctrl = np.zeros(model.nu)
+        for key, trajectory in trajectories.items():
+           id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_ACTUATOR, key)
+           ctrl[id] = trajectory[t]
+        data.ctrl[:] = ctrl
+
+        v.sync()
+        index += 1
         mujoco.mj_step(model, data)
 
 if __name__ == "__main__":
-    
+    model_path = './unitree_g1/scene_with_hands.xml'
 
-    
-    csv_file = '/Users/ccc/dev/tuner/tuner-demo/policy/policy.csv'
-    model_path = '/Users/ccc/dev/tuner/tuner-demo/unitree_g1/scene_with_hands.xml'
-    
-    mujoco.viewer.launch(model_path)
-    
-    joint_angles = load_joint_angles(csv_file)
-    replay_joint_angles(model_path, joint_angles)
+    run(model_path)
 

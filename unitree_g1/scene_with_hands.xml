@@ -15,8 +15,12 @@
       markrgb="0.8 0.8 0.8" width="300" height="300"/>
     <material name="groundplane" texture="groundplane" texuniform="true" texrepeat="5 5" reflectance="0.2"/>
   </asset>
+  <asset>
+    <texture name="background" type="2d" file="pic.png"/>
+    <material name="background" texture="background" texuniform="true"/>
+  </asset>
 
   <worldbody>
-    <geom name="floor" size="0 0 0.05" type="plane" material="groundplane"/>
+    <geom name="background_plane" type="plane" size="10 10 10000" material="background" pos="0 0 -0.01"/>
   </worldbody>
 </mujoco>
