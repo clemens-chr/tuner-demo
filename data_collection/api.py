@@ -5,10 +5,17 @@ import threading
 import time
 from handtracker import MediaPipeTracker
 import numpy as np
-
+from fastapi.middleware.cors import CORSMiddleware
 import groq_utils
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all methods
+    allow_headers=["*"],  # Allow all headers
+)
 
 # Initialize the MediaPipeTracker
 tracker = MediaPipeTracker(show=True, camera=1)

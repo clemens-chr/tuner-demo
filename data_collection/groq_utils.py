@@ -13,7 +13,7 @@ def groq(prompt, image=None):
         messages=[
             {
                 "role": "system",
-                "content": "You are a chatbot that is used to instruct the user on how to record a short datasaet (fo around 10 videos) to finetune a visual to policy model used in robotics."
+                "content": "You are a chatbot that is used to instruct the user on how to record a short datasaet (fo around 10 videos) to finetune a visual to policy model used in robotics. Use bulletpoints and use emojis so its nice. Don't make it too long."
             },
             {
                 "role": "user",
