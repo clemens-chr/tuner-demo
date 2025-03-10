@@ -69,7 +69,7 @@ def load_trajectories_from_csv(file_path):
     
     return trajectories
 
-trajectories = load_trajectories_from_csv('./policy/policy.csv')
+trajectories = load_trajectories_from_csv('/Users/ccc/dev/tuner/tuner-demo/policy/policy.csv')
 
 def set_actuator_trajectory(model, name, values):
     id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_ACTUATOR, name)
@@ -110,12 +110,12 @@ def inv_kinem(model, data, end_effector_id, goal, tol=1e-2, step_size=0.0, dampi
 def run(model_path):
     model = mujoco.MjModel.from_xml_path(model_path)
     data = mujoco.MjData(model)
-    v = mujoco.viewer.launch_passive(model, data)
+    v = mujoco.viewer.launch_passive(model, data, show_left_ui=False, show_right_ui=False)
     #mujoco.viewer.launch(model)
 
     index = 0
     while True:
-        t = int(index // 25) # int seconds
+        t = int(index // 7) # int seconds
 
         #data.ctrl[:] = trajectory[:, t]
 
@@ -130,7 +130,7 @@ def run(model_path):
         mujoco.mj_step(model, data)
 
 if __name__ == "__main__":
-    model_path = './unitree_g1/scene_with_hands.xml'
+    model_path = '/Users/ccc/dev/tuner/tuner-demo/unitree_g1/scene_with_hands.xml'
 
     run(model_path)
 

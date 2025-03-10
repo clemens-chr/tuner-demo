@@ -13,6 +13,13 @@ mp_pose = mp.solutions.pose
 
 csv_file = '/Users/ccc/dev/tuner/tuner-demo/policy/policy.csv'
 
+if os.path.exists(csv_file):
+    # Remove the file
+    os.remove(csv_file)
+    print(f"File {csv_file} has been removed.")
+else:
+    print(f"File {csv_file} does not exist.")
+
 def append_to_policy_csv(csv_file, dict_unitree):
     file_exists = os.path.exists(csv_file) and os.path.getsize(csv_file) > 0
 

@@ -7,6 +7,8 @@ from handtracker import MediaPipeTracker
 import numpy as np
 from fastapi.middleware.cors import CORSMiddleware
 import groq_utils
+import subprocess  
+import os 
 
 app = FastAPI()
 app.add_middleware(
@@ -64,6 +66,14 @@ def video_feed():
 
 @app.get("/start_recording")
 def start_recording():
+    csv_file = '/Users/ccc/dev/tuner/tuner-demo/policy/policy.csv'
+
+    if os.path.exists(csv_file):
+        # Remove the file
+        os.remove(csv_file)
+        print(f"File {csv_file} has been removed.")
+    else:
+        print(f"File {csv_file} does not exist.")
     tracker.start_recording()
     return "Recording started"
 
@@ -75,7 +85,12 @@ def stop_recording():
 @app.get("/groq")
 def groq(prompt: str):
     print("Prompt:", prompt)
-    return groq_utils.groq(prompt)    
+    return groq_utils.groq(prompt)
+
+@app.get("/deploy")
+def deploy():
+    subprocess.run(["mjpython", "/Users/ccc/dev/tuner/tuner-demo/main.py"])
+    return "Deployed"
     
 @app.on_event("shutdown")
 def shutdown_event():
